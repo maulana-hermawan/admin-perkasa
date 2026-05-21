@@ -355,12 +355,24 @@ if ($action === 'tab_data' && $siswa_id) {
             break;
 
         case 'pembayaran':
+            // v2.1: membership_id kini nullable (pembayaran multi-program).
+            // LEFT JOIN agar pembayaran tanpa membership tetap tampil; nama program
+            // fallback ke keterangan_program bila kolom tsb ada (migration 012).
+            $_has_ket = (bool)db_value(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='pembayaran_siswa'
+                 AND COLUMN_NAME='keterangan_program'"
+            );
+            $prog_sel = $_has_ket
+                ? "COALESCE(p.nama_program, ps.keterangan_program) AS nama_program"
+                : "p.nama_program";
             $data = db_fetch_all(
-                "SELECT ps.*, m.tanggal_mulai_aktif, p.nama_program
+                "SELECT ps.*, m.tanggal_mulai_aktif, {$prog_sel}
                  FROM pembayaran_siswa ps
-                 JOIN membership_siswa m ON ps.membership_id = m.id
-                 JOIN program p ON m.program_id = p.id
-                 WHERE ps.siswa_id = ? ORDER BY ps.periode_bulan DESC LIMIT 24",
+                 LEFT JOIN membership_siswa m ON ps.membership_id = m.id
+                 LEFT JOIN program p ON m.program_id = p.id
+                 WHERE ps.siswa_id = ? AND ps.deleted_at IS NULL
+                 ORDER BY COALESCE(ps.tanggal_bayar, ps.created_at) DESC LIMIT 24",
                 "i", [$siswa_id]
             );
             break;

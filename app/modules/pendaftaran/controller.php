@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db_execute(
                     "INSERT INTO siswa (user_id,nomor_induk,nama_lengkap,nomor_wa,tanggal_lahir,jenis_kelamin,asal_sekolah,target_seleksi,alamat,status_siswa)
                      VALUES (?,?,?,?,?,?,?,?,?,'Aktif')",
-                    "isssssss",
+                    "issssssss",
                     [$uid,$nomor_induk,$calon['nama_lengkap'],$calon['nomor_wa'],
                      $calon['tanggal_lahir'],$calon['jenis_kelamin'],
                      $calon['asal_sekolah'],$calon['target_seleksi'],$calon['alamat']]
@@ -116,11 +116,14 @@ return [
 
 function _pendaftaran_generate_nomor_induk(): string
 {
-    $year   = date('y');
-    $last   = db_value("SELECT nomor_induk FROM siswa ORDER BY id DESC LIMIT 1") ?? '';
-    $num    = 1;
-    if (preg_match('/PMTC-\d{2}-(\d{4})/', $last, $m)) {
-        $num = (int)$m[1] + 1;
-    }
-    return 'PMTC-' . $year . '-' . str_pad((string)$num, 4, '0', STR_PAD_LEFT);
+    $yy   = date('y');    // 2 digit tahun: 26
+    $last = db_value(
+        "SELECT nomor_induk FROM siswa
+         WHERE nomor_induk LIKE ?
+         ORDER BY id DESC LIMIT 1",
+        "s", ["PMTC-{$yy}%"]
+    );
+    // Format: PMTC-260001 → ambil 4 digit terakhir
+    $seq = $last ? ((int)substr($last, -4)) + 1 : 1;
+    return sprintf('PMTC-%s%04d', $yy, $seq);
 }

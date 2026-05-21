@@ -99,9 +99,13 @@ CREATE TABLE `program` (
     `kategori_program` ENUM('Jasmani','Akademik','Fasilitas') NOT NULL DEFAULT 'Akademik',
     `deskripsi`        TEXT            NULL,
     `durasi_bulan`     INT UNSIGNED    NOT NULL DEFAULT 6,
+    `biaya_bulanan`    BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `is_active`        TINYINT(1)      NOT NULL DEFAULT 1,
     `created_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    `updated_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at`       DATETIME        NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_active` (`is_active`, `deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `program` (nama_program, kategori_program, deskripsi, durasi_bulan, biaya_bulanan, is_active) VALUES

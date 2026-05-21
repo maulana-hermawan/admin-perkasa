@@ -380,7 +380,7 @@ if ($action === 'store_jasmani') {
           nilai_samapta_a, nilai_samapta_b, nilai_ab, nilai_gabungan,
           skor_akhir, predikat, created_by)
          VALUES (?,?,?,?, ?,?,?, ?,?, ?,?, ?,?,?,?,?,?,?, ?,?,?,?, ?,?,?)",
-        "isssddddddd" . "iiiiiii" . "dddd" . "si",
+        "isssddddddd" . "iiiiiii" . "dddd" . "dsi",
         [$s_id, $tgl, $institusi, $gender,
          $lari, $pullup, $situp,
          $pushup, $shuttle,

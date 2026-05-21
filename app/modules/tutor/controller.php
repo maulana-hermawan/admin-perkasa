@@ -241,6 +241,22 @@ if ($action === 'bayar_gaji') {
     redirect('index.php?page=tutor&action=rekap_gaji&bulan=' . $gaji_bulan);
 }
 
+// ── Delete (GET — aksi cepat via pkConfirm) ─────────────────
+if ($action === 'delete') {
+    csrf_check_get();  // validasi token di GET param
+    $id = get_int('id');
+    $tutor = db_fetch("SELECT * FROM tutor WHERE id=? AND deleted_at IS NULL", "i", [$id]);
+    if ($tutor) {
+        db_execute("UPDATE tutor SET deleted_at=NOW() WHERE id=?", "i", [$id]);
+        db_execute("UPDATE users SET deleted_at=NOW(), is_active=0 WHERE id=?", "i", [$tutor['user_id']]);
+        log_action('DELETE', 'tutor', $id, $tutor, null);
+        set_flash('success', 'Tutor berhasil dihapus.');
+    } else {
+        set_flash('danger', 'Tutor tidak ditemukan.');
+    }
+    redirect('index.php?page=tutor');
+}
+
 // ── Handle POST actions ──────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -360,19 +376,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('index.php?page=tutor');
     }
 
-    if ($action === 'delete') {
-        $id = get_int('id');
-        $tutor = db_fetch("SELECT * FROM tutor WHERE id=? AND deleted_at IS NULL", "i", [$id]);
-        if ($tutor) {
-            db_execute("UPDATE tutor SET deleted_at=NOW() WHERE id=?", "i", [$id]);
-            db_execute("UPDATE users SET deleted_at=NOW(), is_active=0 WHERE id=?", "i", [$tutor['user_id']]);
-            log_action('DELETE', 'tutor', $id, $tutor, null);
-            set_flash('success', 'Tutor berhasil dihapus.');
-        } else {
-            set_flash('danger', 'Tutor tidak ditemukan.');
-        }
-        redirect('index.php?page=tutor');
-    }
 }
 
 // ── GET: List ────────────────────────────────────────────────

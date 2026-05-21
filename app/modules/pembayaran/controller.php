@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  VALUES ('Pemasukan','Bayar Program','Bayar Program',?,?,?,?)",
                 "dssi",
                 [$selisih,
-                 'Pelunasan SPP '.($siswa['nama_lengkap']??'').' — '.e($pay['keterangan_program']??''),
+                 'Pelunasan SPP '.($siswa['nama_lengkap']??'').' — '.($pay['keterangan_program']??''),
                  $tgl_bayar??date('Y-m-d H:i:s'), auth_id()]
             );
         }
