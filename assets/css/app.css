@@ -1,0 +1,285 @@
+/* ================================================================
+   app.css — Perkasa Mulia Training Center v2.0
+   Design Tokens + Component Styles
+   Module 6.3 — Layout System
+   ================================================================ */
+
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+    --pk-navy:         #001233;
+    --pk-navy-light:   #0a2a5e;
+    --pk-navy-mid:     #003285;
+    --pk-sidebar-w:    250px;
+    --pk-sidebar-w-sm: 64px;
+    --pk-topbar-h:     58px;
+    --pk-radius:       10px;
+    --pk-radius-lg:    14px;
+    --pk-shadow:       0 1px 4px rgba(0,0,0,.07);
+    --pk-shadow-md:    0 4px 16px rgba(0,0,0,.1);
+    --pk-transition:   .25s ease;
+    --pk-page-bg:      #f0f2f5;
+    --pk-card-bg:      #ffffff;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+.bg-pk-page { background: var(--pk-page-bg) !important; }
+* { box-sizing: border-box; }
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+[x-cloak] { display: none !important; }
+
+.pk-sidebar {
+    width: var(--pk-sidebar-w);
+    height: 100vh;
+    height: 100dvh;
+    background: var(--pk-navy);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width var(--pk-transition);
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+}
+
+/* Collapsed state (desktop) */
+.pk-sidebar:not(.pk-sidebar--open) {
+    width: var(--pk-sidebar-w-sm);
+}
+
+/* Mobile: off-canvas */
+@media (max-width: 991.98px) {
+    .pk-sidebar {
+        position: fixed;
+        left: 0; top: 0;
+        height: 100vh;
+        height: 100dvh;
+        transform: translateX(-100%);
+        z-index: 1040;
+        transition: transform var(--pk-transition), width var(--pk-transition);
+    }
+    .pk-sidebar.pk-sidebar--open {
+        transform: translateX(0);
+        width: var(--pk-sidebar-w);
+        box-shadow: 6px 0 32px rgba(0,0,0,.35);
+    }
+}
+
+.pk-sidebar__brand {
+    min-height: 62px;
+    flex-shrink: 0;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.pk-sidebar__logo { font-size: 1.4rem; line-height: 1; }
+/* Sembunyikan teks brand saat sidebar collapsed (desktop) */
+.pk-sidebar:not(.pk-sidebar--open) .pk-sidebar__brandtext { display: none !important; }
+
+/* Nav scrolls internally so user section is never cut off */
+.pk-sidebar__nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 0;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.12) transparent;
+}
+.pk-sidebar__nav::-webkit-scrollbar { width: 4px; }
+.pk-sidebar__nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+.pk-sidebar__user { flex-shrink: 0; min-height: 0; }
+
+/* Nav link */
+.pk-sidebar__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    margin: 2px 8px;
+    border-radius: 8px;
+    color: rgba(255,255,255,.6);
+    text-decoration: none;
+    font-size: .855rem;
+    transition: all .15s;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+}
+.pk-sidebar__link:hover {
+    color: #fff;
+    background: rgba(255,255,255,.1);
+}
+.pk-sidebar__link--active {
+    color: #fff !important;
+    background: var(--pk-navy-mid) !important;
+    box-shadow: inset 3px 0 0 #0d6efd;
+}
+.pk-sidebar__icon { font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center; }
+.pk-sidebar__label { transition: opacity var(--pk-transition); }
+.pk-sidebar__section-label { opacity: .5; font-size: .65rem; letter-spacing: .06em; }
+.pk-sidebar__divider { border-top: 1px solid rgba(255,255,255,.08); margin: 8px 12px; }
+.pk-sidebar__active-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #0d6efd;
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+}
+
+/* Avatar */
+.pk-sidebar__avatar, .pk-topbar__avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #0d6efd; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .75rem; flex-shrink: 0;
+}
+.pk-topbar__avatar { width: 34px; height: 34px; }
+
+/* ── Main Content ────────────────────────────────────────────── */
+.pk-main {
+    min-width: 0;
+    transition: margin-left var(--pk-transition);
+}
+
+/* ── Topbar ──────────────────────────────────────────────────── */
+.pk-topbar {
+    height: var(--pk-topbar-h);
+    background: var(--pk-card-bg);
+    border-bottom: 1px solid #e9ecef;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.pk-search-input {
+    border-radius: 20px !important;
+    background: #f4f7f9 !important;
+    border-color: transparent !important;
+    font-size: .85rem !important;
+    transition: all .2s;
+}
+.pk-search-input:focus {
+    background: #fff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 3px rgba(13,110,253,.12) !important;
+    width: 320px;
+}
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.pk-card {
+    background: var(--pk-card-bg);
+    border: none;
+    border-radius: var(--pk-radius-lg);
+    box-shadow: var(--pk-shadow);
+    transition: box-shadow .2s;
+}
+.pk-card:hover { box-shadow: var(--pk-shadow-md); }
+
+/* Stat card */
+.pk-stat-card { padding: 1rem 1.25rem; }
+.pk-stat-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+}
+
+/* ── Tables ──────────────────────────────────────────────────── */
+.pk-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.pk-table thead th {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #6c757d;
+    border-bottom: 2px solid #dee2e6;
+    padding: 10px 12px;
+    white-space: nowrap;
+}
+.pk-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f3f5;
+    vertical-align: middle;
+    font-size: .875rem;
+}
+.pk-table tbody tr:last-child td { border-bottom: none; }
+.pk-table tbody tr:hover td { background: #f8f9fa; }
+
+/* ── Tabs (detail page) ──────────────────────────────────────── */
+.pk-tabs .nav-link {
+    font-size: .825rem;
+    color: #6c757d;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 8px 16px;
+    transition: all .15s;
+}
+.pk-tabs .nav-link:hover { color: #0d6efd; }
+.pk-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    font-weight: 600;
+    background: transparent;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────────── */
+.breadcrumb-sm { font-size: .8rem; }
+.breadcrumb-item + .breadcrumb-item::before { font-size: .7rem; }
+
+/* ── Badge status ────────────────────────────────────────────── */
+.pk-badge-aktif       { background: #d1e7dd; color: #0a5c36; }
+.pk-badge-cuti        { background: #fff3cd; color: #856404; }
+.pk-badge-lulus       { background: #cfe2ff; color: #084298; }
+.pk-badge-tidakaktif  { background: #e2e3e5; color: #383d41; }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.pk-empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #adb5bd;
+}
+.pk-empty-state i { font-size: 3rem; display: block; margin-bottom: .75rem; }
+
+/* ── Responsive: mobile card view ───────────────────────────── */
+@media (max-width: 639px) {
+    .pk-table-mobile thead { display: none; }
+    .pk-table-mobile tbody tr {
+        display: block;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        margin-bottom: .75rem;
+        padding: .75rem;
+        background: #fff;
+    }
+    .pk-table-mobile tbody td {
+        display: flex;
+        justify-content: space-between;
+        border: none;
+        padding: 4px 0;
+        font-size: .8rem;
+    }
+    .pk-table-mobile tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+        font-size: .72rem;
+        margin-right: .5rem;
+        flex-shrink: 0;
+    }
+}
+
+/* ── Skeleton loading ────────────────────────────────────────── */
+.pk-skeleton {
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: pk-shimmer 1.5s infinite;
+    border-radius: 6px;
+    height: 16px;
+}
+@keyframes pk-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+
+/* ── Cloak (Alpine.js hide before init) ─────────────────────── */
+[x-cloak] { display: none !important; }
+
+/* ── Content padding ─────────────────────────────────────────── */
+.pk-content { min-height: calc(100vh - var(--pk-topbar-h) - 3rem); }
