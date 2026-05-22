@@ -12,6 +12,14 @@
 define('FONNTE_TOKEN',      env('FONNTE_TOKEN',      ''));
 define('FONNTE_SENDER',     env('FONNTE_SENDER',     ''));     // nomor pengirim (opsional)
 
+// Nomor WA Admin — digunakan untuk notifikasi & tampilan kontak
+define('ADMIN_WA_1',        env('ADMIN_WA_1',        '6287777538280')); // Coach Bagus
+define('ADMIN_WA_2',        env('ADMIN_WA_2',        '6281235647133')); // Miss Dina
+define('ADMIN_WA_1_NAME',   env('ADMIN_WA_1_NAME',   'Coach Bagus'));
+define('ADMIN_WA_2_NAME',   env('ADMIN_WA_2_NAME',   'Miss Dina'));
+// Backward compat — konstanta lama mengarah ke Admin 1
+defined('ADMIN_WA_NUMBER') || define('ADMIN_WA_NUMBER', ADMIN_WA_1);
+
 // CAT Psikotes
 define('CAT_DB_HOST',       env('CAT_DB_HOST',       'localhost'));
 define('CAT_DB_USER',       env('CAT_DB_USER',       ''));

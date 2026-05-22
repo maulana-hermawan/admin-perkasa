@@ -62,11 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
 
-                // Notif WA ke admin (jika Fonnte dikonfigurasi)
-                $admin_wa = env('ADMIN_WA_NUMBER','');
-                if ($admin_wa) {
-                    send_wa($admin_wa, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
-                }
+                // Notif WA ke semua admin (jika Fonnte dikonfigurasi)
+                $pesan_admin = "📋 *Pendaftar Baru!*\n\n*Nama:* {$nama}\n*WA:* {$wa}\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Antrian Pendaftaran.";
+                if (defined('ADMIN_WA_1') && ADMIN_WA_1) send_wa(ADMIN_WA_1, $pesan_admin);
+                if (defined('ADMIN_WA_2') && ADMIN_WA_2) send_wa(ADMIN_WA_2, $pesan_admin);
             } catch (Throwable $ex) {
                 $error = 'Terjadi kesalahan sistem. Coba lagi atau hubungi admin langsung via WhatsApp.';
             }
@@ -191,11 +190,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                     <p class="text-muted text-center" style="font-size:.72rem;">
                         Data Anda akan digunakan hanya untuk keperluan pendaftaran bimbel Perkasa.<br>
-                        Butuh info lebih lanjut? Chat via WA:
-                        <a href="https://wa.me/62<?= ltrim(env('ADMIN_WA_NUMBER','081234567890'),'0') ?>">
-                            <?= e(env('ADMIN_WA_NUMBER','0812-3456-7890')) ?>
-                        </a>
+                        Butuh info lebih lanjut? Hubungi admin via WhatsApp:
                     </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="https://wa.me/<?= ADMIN_WA_1 ?>?text=<?= urlencode('Halo, saya ingin tanya informasi pendaftaran Perkasa Mulia TC.') ?>"
+                           target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-whatsapp me-1"></i><?= e(ADMIN_WA_1_NAME) ?>
+                        </a>
+                        <a href="https://wa.me/<?= ADMIN_WA_2 ?>?text=<?= urlencode('Halo, saya ingin tanya informasi pendaftaran Perkasa Mulia TC.') ?>"
+                           target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-whatsapp me-1"></i><?= e(ADMIN_WA_2_NAME) ?>
+                        </a>
+                    </div>
                 </div>
             </div>
         </form>

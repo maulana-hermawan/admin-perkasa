@@ -29,7 +29,11 @@ $nomor_kwit = 'PMTC-' . date('y', strtotime($pay['tanggal_bayar'] ?? $pay['creat
                  onerror="this.outerHTML='<span style=\'font-size:2rem;\'>🏋️</span>'">
             <div>
                 <div class="fw-bold" style="font-size:1rem;color:#001233;">Perkasa Mulia Training Center</div>
-                <div class="text-muted" style="font-size:.75rem;">Jl. Contoh No. 123, Kota — WA: <?= defined('ADMIN_WA_NUMBER') ? e(ADMIN_WA_NUMBER) : '—' ?></div>
+                <div class="text-muted" style="font-size:.75rem;">
+                    WA: <?= defined('ADMIN_WA_1') ? e(ADMIN_WA_1) . ' (' . e(ADMIN_WA_1_NAME) . ')' : '—' ?>
+                    &nbsp;|&nbsp;
+                    <?= defined('ADMIN_WA_2') ? e(ADMIN_WA_2) . ' (' . e(ADMIN_WA_2_NAME) . ')' : '' ?>
+                </div>
             </div>
         </div>
         <div class="text-end">
