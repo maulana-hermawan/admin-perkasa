@@ -254,11 +254,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                     <p class="text-muted text-center" style="font-size:.72rem;">
                         Data Anda akan digunakan hanya untuk keperluan pendaftaran bimbel Perkasa.<br>
-                        Butuh info lebih lanjut? Chat via WA:
-                        <?php $admin_kontak = trim(explode(',', env('ADMIN_WA_NUMBER','087777538280'))[0]); ?>
-                        <a href="https://wa.me/62<?= ltrim($admin_kontak,'0') ?>">
-                            <?= e($admin_kontak) ?>
-                        </a>
+                        Butuh info lebih lanjut? Chat via WA:<br>
+                        <a href="https://wa.me/6287777538280">087777538280</a> (Coach Bagus)
+                        &nbsp;·&nbsp;
+                        <a href="https://wa.me/6281235647133">081235647133</a> (Miss Dina)
                     </p>
                 </div>
             </div>
