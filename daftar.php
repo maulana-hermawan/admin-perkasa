@@ -84,7 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="apple-touch-icon" href="assets/logo.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <style>
+        [x-cloak] { display: none !important; }
         body { background: linear-gradient(135deg,#001233 0%,#0d3b66 100%); min-height: 100vh; padding: 2rem 1rem; }
         .reg-card { max-width:580px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; }
         .reg-header { background:#001233; color:#fff; padding:1.5rem 2rem; }
@@ -159,14 +161,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="P" <?= post('jenis_kelamin')==='P'?'selected':'' ?>>Perempuan</option>
                     </select>
                 </div>
-                <div class="col-12">
+                <div class="col-12" x-data="{
+                    seleksi: '<?= e(post('_target_base','')) ?>',
+                    pangkat: '<?= e(post('_target_pangkat','')) ?>',
+                    lainnya: '<?= e(post('_target_lainnya','')) ?>',
+                    needPangkat() { return ['POLRI','TNI AD','TNI AL','TNI AU'].includes(this.seleksi); },
+                    combined() {
+                        if (this.seleksi === 'LAINNYA') return this.lainnya;
+                        if (this.needPangkat() && this.pangkat) return this.pangkat + ' ' + this.seleksi;
+                        return this.seleksi;
+                    }
+                }">
+                    <input type="hidden" name="target_seleksi" :value="combined()">
+                    <input type="hidden" name="_target_base" :value="seleksi">
+                    <input type="hidden" name="_target_pangkat" :value="pangkat">
+                    <input type="hidden" name="_target_lainnya" :value="lainnya">
                     <label class="form-label fw-bold small">Target Seleksi</label>
-                    <select name="target_seleksi" class="form-select">
+                    <select x-model="seleksi" class="form-select" @change="pangkat=''; lainnya='';">
                         <option value="">— Pilih (opsional) —</option>
-                        <?php foreach(['Polri','TNI AD','TNI AL','TNI AU','Akmil','IPDN','Bintara','Tamtama','Lainnya'] as $t): ?>
-                        <option value="<?= $t ?>" <?= post('target_seleksi')===$t?'selected':'' ?>><?= $t ?></option>
+                        <?php foreach(['POLRI','TNI AD','TNI AL','TNI AU','IPDN','STIN','STIS','STMKG','POLTEK SSN','POLTEKIP','POLTEKIM','CPNS','LAINNYA'] as $t): ?>
+                        <option value="<?= $t ?>"><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div x-show="needPangkat()" x-cloak class="mt-2">
+                        <label class="form-label small">Pangkat / Jenjang</label>
+                        <select x-model="pangkat" class="form-select">
+                            <option value="">— Pilih Pangkat —</option>
+                            <option value="TAMTAMA">TAMTAMA</option>
+                            <option value="BINTARA">BINTARA</option>
+                            <option value="AKADEMI / PERWIRA">AKADEMI / PERWIRA</option>
+                        </select>
+                    </div>
+                    <div x-show="seleksi === 'LAINNYA'" x-cloak class="mt-2">
+                        <label class="form-label small">Sebutkan target seleksi</label>
+                        <input type="text" x-model="lainnya" class="form-control" placeholder="Ketik target seleksi Anda">
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold small">Asal Sekolah / Instansi</label>
