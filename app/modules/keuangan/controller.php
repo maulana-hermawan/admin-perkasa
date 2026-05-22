@@ -46,7 +46,7 @@ if ($action === 'update' && $keu_id) {
     $k_keluar = $jenis==='Pengeluaran'? $kategori : null;
     $lama     = db_fetch("SELECT * FROM transaksi_keuangan WHERE id=?","i",[$keu_id]);
     db_query("UPDATE transaksi_keuangan SET jenis_arus=?,kategori=?,kategori_pemasukan=?,kategori_pengeluaran=?,nominal=?,keterangan_transaksi=?,tanggal_transaksi=? WHERE id=?",
-        "ssssdssI",[$jenis,$kategori,$k_masuk,$k_keluar,(float)post('nominal'),post('keterangan'),post('tanggal_transaksi') ?: date('Y-m-d H:i:s'),$keu_id]);
+        "ssssdssi",[$jenis,$kategori,$k_masuk,$k_keluar,(float)post('nominal'),post('keterangan'),post('tanggal_transaksi') ?: date('Y-m-d H:i:s'),$keu_id]);
     log_action('UPDATE_TRANSAKSI','transaksi_keuangan',$keu_id,$lama);
     flash('success','Transaksi diperbarui.');
     redirect('index.php?page=keuangan');

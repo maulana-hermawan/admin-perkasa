@@ -168,7 +168,10 @@ $wa_link_siswa = wa_link(
                     data-bs-toggle="tab"
                     data-bs-target="#pane-<?= $tab_id ?>"
                     data-tab="<?= $tab_id ?>"
-                    type="button" role="tab">
+                    type="button" role="tab"
+                    aria-controls="pane-<?= $tab_id ?>"
+                    aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
+                    tabindex="<?= $i === 0 ? '0' : '-1' ?>">
                 <i class="bi <?= $icon ?> d-none d-sm-inline me-1"></i><?= $label ?>
             </button>
         </li>
@@ -180,7 +183,7 @@ $wa_link_siswa = wa_link(
 <div class="tab-content">
 
     <!-- TAB 1: PROFIL (loaded immediately — no lazy) ─────────── -->
-    <div class="tab-pane fade show active" id="pane-profil" role="tabpanel">
+    <div class="tab-pane fade show active" id="pane-profil" role="tabpanel" aria-labelledby="btn-profil">
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="pk-card p-4">
@@ -234,7 +237,7 @@ $wa_link_siswa = wa_link(
 
     <!-- TAB 2–5: LAZY LOADED ─────────────────────────────────── -->
     <?php foreach (['membership', 'pembayaran', 'nilai', 'kehadiran'] as $tid): ?>
-    <div class="tab-pane fade" id="pane-<?= $tid ?>" role="tabpanel" data-lazy="false">
+    <div class="tab-pane fade" id="pane-<?= $tid ?>" role="tabpanel" data-lazy="false" aria-labelledby="btn-<?= $tid ?>">
         <!-- Skeleton placeholder -->
         <div class="pk-card p-4 lazy-skeleton">
             <div class="pk-skeleton mb-3" style="width:180px;"></div>
@@ -246,7 +249,7 @@ $wa_link_siswa = wa_link(
     <?php endforeach; ?>
 
     <!-- TAB 6: CATATAN (form → submit langsung) ─────────────── -->
-    <div class="tab-pane fade" id="pane-catatan" role="tabpanel">
+    <div class="tab-pane fade" id="pane-catatan" role="tabpanel" aria-labelledby="btn-catatan">
         <div class="pk-card p-4">
             <h6 class="fw-bold mb-3">
                 <i class="bi bi-chat-square-text-fill text-muted me-2"></i>Catatan Perkembangan

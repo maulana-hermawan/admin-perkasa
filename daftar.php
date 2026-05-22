@@ -38,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gender   = post('jenis_kelamin','');
     $alamat   = trim(post('alamat',''));
     $catatan  = trim(post('catatan',''));
+    $nama_ortu= trim(post('nama_ortu',''));
+    $wa_ortu  = preg_replace('/\D/','',post('nomor_wa_ortu',''));
 
     if (!$nama || strlen($nama) < 3) { $error = 'Nama lengkap minimal 3 karakter.'; }
     elseif (!$wa || strlen($wa) < 9)  { $error = 'Nomor WhatsApp tidak valid.'; }
@@ -51,22 +53,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Nomor WhatsApp ini sudah terdaftar hari ini. Admin akan menghubungi Anda segera.';
         } else {
             try {
-                db_execute(
-                    "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
-                     VALUES (?,?,?,?,?,?,?,?,?)",
-                    "sssssssss",
-                    [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
-                     $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                // Schema-safe: kolom ortu mungkin belum ada (sebelum migration 014)
+                $has_ortu = (bool)db_value(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='calon_siswa' AND COLUMN_NAME='nama_ortu'"
                 );
+                if ($has_ortu) {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,nama_ortu,nomor_wa_ortu,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        "sssssssssss",
+                        [$nama, $wa, $nama_ortu ?: null, $wa_ortu ?: null, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                } else {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?)",
+                        "sssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                }
                 $new_id = db_conn()->insert_id;
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
 
-                // Notif WA ke admin (jika Fonnte dikonfigurasi)
-                $admin_wa = env('ADMIN_WA_NUMBER','');
-                if ($admin_wa) {
-                    send_wa($admin_wa, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
-                }
+                // Notif WA ke semua admin (jika Fonnte dikonfigurasi)
+                $pesan_admin = "📋 *Pendaftar Baru!*\n\n*Nama:* {$nama}\n*WA:* {$wa}\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Antrian Pendaftaran.";
+                if (defined('ADMIN_WA_1') && ADMIN_WA_1) send_wa(ADMIN_WA_1, $pesan_admin);
+                if (defined('ADMIN_WA_2') && ADMIN_WA_2) send_wa(ADMIN_WA_2, $pesan_admin);
             } catch (Throwable $ex) {
                 $error = 'Terjadi kesalahan sistem. Coba lagi atau hubungi admin langsung via WhatsApp.';
             }
@@ -151,6 +167,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="date" name="tanggal_lahir" class="form-control"
                            value="<?= e(post('tanggal_lahir','')) ?>">
                 </div>
+
+                <!-- Data Ortu/Wali -->
+                <div class="col-12">
+                    <hr class="my-1">
+                    <div class="text-muted fw-bold small"><i class="bi bi-people-fill me-1"></i>Data Orang Tua / Wali</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nama Ortu / Wali</label>
+                    <input type="text" name="nama_ortu" class="form-control"
+                           value="<?= e(post('nama_ortu','')) ?>" placeholder="Nama lengkap ortu/wali">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nomor WhatsApp Ortu / Wali</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-whatsapp text-success"></i></span>
+                        <input type="tel" name="nomor_wa_ortu" class="form-control"
+                               value="<?= e(post('nomor_wa_ortu','')) ?>" placeholder="08xxxxxxxxxx (opsional)">
+                    </div>
+                </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold small">Jenis Kelamin</label>
                     <select name="jenis_kelamin" class="form-select">
@@ -191,11 +226,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                     <p class="text-muted text-center" style="font-size:.72rem;">
                         Data Anda akan digunakan hanya untuk keperluan pendaftaran bimbel Perkasa.<br>
-                        Butuh info lebih lanjut? Chat via WA:
-                        <a href="https://wa.me/62<?= ltrim(env('ADMIN_WA_NUMBER','081234567890'),'0') ?>">
-                            <?= e(env('ADMIN_WA_NUMBER','0812-3456-7890')) ?>
-                        </a>
+                        Butuh info lebih lanjut? Hubungi admin via WhatsApp:
                     </p>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="https://wa.me/<?= ADMIN_WA_1 ?>?text=<?= urlencode('Halo, saya ingin tanya informasi pendaftaran Perkasa Mulia TC.') ?>"
+                           target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-whatsapp me-1"></i><?= e(ADMIN_WA_1_NAME) ?>
+                        </a>
+                        <a href="https://wa.me/<?= ADMIN_WA_2 ?>?text=<?= urlencode('Halo, saya ingin tanya informasi pendaftaran Perkasa Mulia TC.') ?>"
+                           target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-whatsapp me-1"></i><?= e(ADMIN_WA_2_NAME) ?>
+                        </a>
+                    </div>
                 </div>
             </div>
         </form>

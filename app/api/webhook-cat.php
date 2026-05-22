@@ -103,7 +103,7 @@ if ($siswa_id) {
              'cat_id:' . $cat_id, $dup]
         );
         $action = 'UPDATED';
-        $rec_id = $dup;
+        $rec_id = (int)$dup;
     } else {
         db_execute(
             "INSERT INTO penilaian_psikologi

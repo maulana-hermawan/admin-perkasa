@@ -145,6 +145,21 @@
 
 </div>
 
+<!-- Link ke Audit Log (admin/owner) -->
+<?php if (auth_is(['admin','owner'])): ?>
+<div class="mt-4">
+    <div class="pk-card p-3 d-flex align-items-center justify-content-between">
+        <div>
+            <div class="fw-bold"><i class="bi bi-clock-history me-2 text-secondary"></i>Audit Log</div>
+            <div class="text-muted small mt-1">Lihat riwayat semua aktivitas sistem — siapa mengubah apa dan kapan.</div>
+        </div>
+        <a href="index.php?page=settings&action=audit_log" class="btn btn-outline-secondary btn-sm">
+            Buka Log <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+</div>
+<?php endif; ?>
+
 <script>
 function toggle(id) {
     const el = document.getElementById(id);

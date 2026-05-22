@@ -15,6 +15,7 @@ if (file_exists(__DIR__ . '/storage/setup.done')) {
 require_once __DIR__ . '/app/config/database.php';
 require_once __DIR__ . '/app/core/db.php';
 require_once __DIR__ . '/app/core/helpers.php';
+require_once __DIR__ . '/app/core/auth.php';
 
 session_bootstrap();
 

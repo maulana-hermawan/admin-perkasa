@@ -35,8 +35,12 @@ $nav_items = [
     <!-- ── Brand ── -->
     <div class="pk-sidebar__brand d-flex align-items-center justify-content-between p-3 border-bottom border-white border-opacity-10">
         <div class="d-flex align-items-center gap-2 overflow-hidden flex-grow-1" style="min-width:0;">
-            <!-- Logo — selalu tampil -->
-            <div style="width:32px;height:32px;flex-shrink:0;">
+            <!-- Logo — klik untuk toggle sidebar (desktop) -->
+            <div @click="toggleSidebar()"
+                 class="d-flex align-items-center justify-content-center"
+                 style="width:32px;height:32px;flex-shrink:0;cursor:pointer;"
+                 title="Perkecil/Perbesar sidebar" role="button" tabindex="0"
+                 @keydown.enter="toggleSidebar()">
                 <img src="<?= rtrim(APP_URL,'/') ?>/assets/logo.svg"
                      alt="Logo"
                      style="width:100%;height:100%;object-fit:contain;filter:brightness(0) invert(1);"
@@ -48,12 +52,6 @@ $nav_items = [
                 <div class="text-white opacity-50" style="font-size:.6rem;letter-spacing:.06em;">TRAINING CENTER</div>
             </div>
         </div>
-        <!-- Toggle desktop -->
-        <button @click="toggleSidebar()"
-                class="btn btn-link text-white opacity-50 p-0 d-none d-lg-flex flex-shrink-0"
-                title="Perkecil/Perbesar sidebar">
-            <i class="bi" :class="sidebarOpen ? 'bi-layout-sidebar-reverse' : 'bi-layout-sidebar'"></i>
-        </button>
         <!-- Tutup di mobile -->
         <button @click="sidebarOpen = false"
                 class="btn btn-link text-white opacity-50 p-0 d-lg-none flex-shrink-0"
@@ -118,7 +116,7 @@ $nav_items = [
                     <li>
                         <a class="dropdown-item small text-danger"
                            href="logout.php"
-                           onclick="return confirm('Yakin ingin keluar?')">
+                           onclick="event.preventDefault(); pkConfirm('Yakin ingin keluar dari sistem?', () => window.location.href='logout.php', {title:'Keluar', btnLabel:'Ya, Keluar', btnClass:'btn-warning'});">
                             <i class="bi bi-power me-2"></i>Keluar
                         </a>
                     </li>

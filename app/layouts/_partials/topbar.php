@@ -163,7 +163,7 @@ try {
             <li>
                 <a class="dropdown-item rounded-2 small py-2 text-danger"
                    href="logout.php"
-                   onclick="return confirm('Yakin ingin keluar dari sistem?')">
+                   onclick="event.preventDefault(); pkConfirm('Yakin ingin keluar dari sistem?', () => window.location.href='logout.php', {title:'Keluar', btnLabel:'Ya, Keluar', btnClass:'btn-warning'});">
                     <i class="bi bi-power me-2"></i>Keluar
                 </a>
             </li>
