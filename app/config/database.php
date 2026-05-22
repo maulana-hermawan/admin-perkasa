@@ -136,7 +136,8 @@ CSRF_TOKEN_LENGTH=32
 # WhatsApp Fonnte (opsional - isi nanti)
 FONNTE_TOKEN=
 FONNTE_SENDER=
-ADMIN_WA_NUMBER=
+# Nomor admin penerima notifikasi; bisa >1 dipisah koma
+ADMIN_WA_NUMBER=087777538280,081235647133
 
 # CAT Webhook (opsional - isi nanti)
 CAT_WEBHOOK_SECRET=perkasa-cat-secret-2026

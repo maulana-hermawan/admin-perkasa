@@ -83,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
 
-                // Notif WA ke admin (jika Fonnte dikonfigurasi)
-                $admin_wa = env('ADMIN_WA_NUMBER','');
-                if ($admin_wa) {
-                    send_wa($admin_wa, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
+                // Notif WA ke admin (bisa >1 nomor, pisahkan dengan koma)
+                $admin_wa = env('ADMIN_WA_NUMBER','087777538280,081235647133');
+                foreach (array_filter(array_map('trim', explode(',', $admin_wa))) as $no) {
+                    send_wa($no, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
                 }
             } catch (Throwable $ex) {
                 $error = 'Terjadi kesalahan sistem. Coba lagi atau hubungi admin langsung via WhatsApp.';
@@ -255,8 +255,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p class="text-muted text-center" style="font-size:.72rem;">
                         Data Anda akan digunakan hanya untuk keperluan pendaftaran bimbel Perkasa.<br>
                         Butuh info lebih lanjut? Chat via WA:
-                        <a href="https://wa.me/62<?= ltrim(env('ADMIN_WA_NUMBER','081234567890'),'0') ?>">
-                            <?= e(env('ADMIN_WA_NUMBER','0812-3456-7890')) ?>
+                        <?php $admin_kontak = trim(explode(',', env('ADMIN_WA_NUMBER','087777538280'))[0]); ?>
+                        <a href="https://wa.me/62<?= ltrim($admin_kontak,'0') ?>">
+                            <?= e($admin_kontak) ?>
                         </a>
                     </p>
                 </div>
