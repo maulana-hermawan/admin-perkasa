@@ -145,6 +145,9 @@
                         <?php endif; ?>
                     </td>
                     <td class="text-center pe-3" data-label="">
+                        <a href="index.php?page=pembayaran&action=kwitansi&id=<?= (int)$p['id'] ?>"
+                           class="btn btn-sm btn-outline-secondary" title="Cetak Kwitansi">
+                            <i class="bi bi-receipt"></i></a>
                         <a href="index.php?page=pembayaran&action=edit&id=<?= (int)$p['id'] ?>"
                            class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil-fill"></i></a>
                         <?php if ($p['nomor_wa']): ?>

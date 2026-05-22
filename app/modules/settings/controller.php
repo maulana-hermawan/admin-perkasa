@@ -76,6 +76,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ── GET: audit log viewer ──────────────────────────────────────
+if ($action === 'audit_log') {
+    check_role(['admin','owner']);
+
+    $f_action = trim(get('f_action', ''));
+    $f_table  = trim(get('f_table', ''));
+    $f_date   = trim(get('f_date', ''));
+    $f_user   = trim(get('f_user', ''));
+    $p        = max(1, get_int('p', 1));
+    $per_page = 50;
+    $offset   = ($p - 1) * $per_page;
+
+    $where = [];
+    $types = '';
+    $params = [];
+    if ($f_action) { $where[] = "al.action LIKE ?";       $types .= 's'; $params[] = '%'.$f_action.'%'; }
+    if ($f_table)  { $where[] = "al.target_table = ?";    $types .= 's'; $params[] = $f_table; }
+    if ($f_date)   { $where[] = "DATE(al.created_at) = ?";$types .= 's'; $params[] = $f_date; }
+    if ($f_user)   { $where[] = "(u.email LIKE ? OR u.nama_display LIKE ?)"; $types .= 'ss'; $params[] = '%'.$f_user.'%'; $params[] = '%'.$f_user.'%'; }
+
+    $where_sql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+
+    $count_sql = "SELECT COUNT(*) FROM audit_log al LEFT JOIN users u ON al.user_id=u.id $where_sql";
+    $total = $types ? (int)(db_value($count_sql, $types, $params) ?? 0)
+                    : (int)(db_value("SELECT COUNT(*) FROM audit_log") ?? 0);
+
+    $params_q = array_merge($params, [$per_page, $offset]);
+    $types_q  = $types . 'ii';
+    $logs = db_fetch_all(
+        "SELECT al.*, u.nama_display, u.email
+         FROM audit_log al
+         LEFT JOIN users u ON al.user_id = u.id
+         $where_sql
+         ORDER BY al.created_at DESC
+         LIMIT ? OFFSET ?",
+        $types_q, $params_q
+    );
+
+    $dist_tables = db_fetch_all("SELECT DISTINCT target_table FROM audit_log ORDER BY target_table");
+
+    return [
+        'title'         => 'Audit Log',
+        'view'          => __DIR__ . '/audit_log.view.php',
+        'breadcrumbs'   => [['label'=>'Pengaturan','url'=>'index.php?page=settings'],['label'=>'Audit Log']],
+        'logs'          => $logs,
+        'total'         => $total,
+        'p'             => $p,
+        'per_page'      => $per_page,
+        'f_action'      => $f_action,
+        'f_table'       => $f_table,
+        'f_date'        => $f_date,
+        'f_user'        => $f_user,
+        'dist_tables'   => $dist_tables,
+    ];
+}
+
 // ── GET: setup 2FA — generate secret baru ─────────────────────
 if ($action === 'setup_2fa') {
     $totp_secret = TOTP::generateSecret();

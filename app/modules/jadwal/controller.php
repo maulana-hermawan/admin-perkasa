@@ -22,14 +22,35 @@ if ($action === 'get_json') {
     exit;
 }
 
-// ── DELETE ────────────────────────────────────────────────────
+// ── DELETE (soft) ─────────────────────────────────────────────
 if ($action === 'delete') {
     csrf_check();
     $jid  = get_int('id');
-    $lama = db_fetch("SELECT nama_kegiatan,tanggal FROM jadwal WHERE id=?","i",[$jid]);
+
+    // Schema-safe: cek apakah kolom deleted_at sudah ada di jadwal
+    static $_jdel = null;
+    if ($_jdel === null) {
+        $_jdel = (bool)db_value(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='jadwal' AND COLUMN_NAME='deleted_at'"
+        );
+    }
+
+    $lama = db_fetch(
+        $_jdel
+            ? "SELECT nama_kegiatan,tanggal FROM jadwal WHERE id=? AND deleted_at IS NULL"
+            : "SELECT nama_kegiatan,tanggal FROM jadwal WHERE id=?",
+        "i", [$jid]
+    );
+
     if ($lama) {
-        db_query("DELETE FROM jadwal_tutor WHERE jadwal_id=?","i",[$jid]);
-        db_query("DELETE FROM jadwal WHERE id=?","i",[$jid]);
+        if ($_jdel) {
+            db_query("UPDATE jadwal SET deleted_at=NOW() WHERE id=?","i",[$jid]);
+        } else {
+            // Fallback hard delete saat kolom belum ada (sebelum migration 013)
+            db_query("DELETE FROM jadwal_tutor WHERE jadwal_id=?","i",[$jid]);
+            db_query("DELETE FROM jadwal WHERE id=?","i",[$jid]);
+        }
         log_action('DELETE_JADWAL','jadwal',$jid,$lama);
         flash('success','Jadwal dihapus.');
     }
@@ -101,6 +122,16 @@ $bulan = max(1, min(12, get_int('bulan', (int)date('n'))));
 $tahun = max(2020, min(2030, get_int('tahun', (int)date('Y'))));
 $sub_v = get('sub','calendar');
 
+// Schema-safe: tambahkan filter deleted_at IS NULL jika kolom sudah ada
+static $_jdel_list = null;
+if ($_jdel_list === null) {
+    $_jdel_list = (bool)db_value(
+        "SELECT COUNT(*) FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='jadwal' AND COLUMN_NAME='deleted_at'"
+    );
+}
+$jadwal_del_cond = $_jdel_list ? "AND j.deleted_at IS NULL" : "";
+
 $jadwal_bulan = db_fetch_all(
     "SELECT j.*, p.nama_program,
             (SELECT GROUP_CONCAT(t.nama_lengkap ORDER BY t.nama_lengkap SEPARATOR ', ')
@@ -108,7 +139,7 @@ $jadwal_bulan = db_fetch_all(
              WHERE jt.jadwal_id=j.id) AS nama_tutor
      FROM jadwal j
      LEFT JOIN program p ON j.program_id=p.id
-     WHERE MONTH(j.tanggal)=? AND YEAR(j.tanggal)=?
+     WHERE MONTH(j.tanggal)=? AND YEAR(j.tanggal)=? {$jadwal_del_cond}
      ORDER BY j.tanggal, j.waktu_mulai",
     "ii", [$bulan, $tahun]
 );

@@ -65,6 +65,8 @@ $ALLOWED_ACTIONS = ['index', 'create', 'store', 'edit', 'update', 'delete', 'det
                     'setup_2fa', 'enable_2fa', 'disable_2fa',
                     'update_password', 'update_profile',
                     'terima', 'tolak', 'proses',
+                    'audit_log',   // settings: viewer log aktivitas
+                    'kwitansi',    // pembayaran: cetak bukti bayar
                     // AJAX actions
                     'hitung_binjas', 'rekap_siswa', 'get_json', 'get_memberships'];
 if (!in_array($action, $ALLOWED_ACTIONS, true)) {

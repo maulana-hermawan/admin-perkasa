@@ -118,7 +118,7 @@ $nav_items = [
                     <li>
                         <a class="dropdown-item small text-danger"
                            href="logout.php"
-                           onclick="return confirm('Yakin ingin keluar?')">
+                           onclick="event.preventDefault(); pkConfirm('Yakin ingin keluar dari sistem?', () => window.location.href='logout.php', {title:'Keluar', btnLabel:'Ya, Keluar', btnClass:'btn-warning'});">
                             <i class="bi bi-power me-2"></i>Keluar
                         </a>
                     </li>

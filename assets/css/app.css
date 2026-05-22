@@ -283,3 +283,56 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
 
 /* ── Content padding ─────────────────────────────────────────── */
 .pk-content { min-height: calc(100vh - var(--pk-topbar-h) - 3rem); }
+
+/* ── Focus-visible — keyboard navigation ─────────────────────── */
+:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+.pk-sidebar__link:focus-visible {
+    outline: 2px solid rgba(255,255,255,.6);
+    outline-offset: -2px;
+    border-radius: 8px;
+}
+.pk-tabs .nav-link:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+    border-radius: 4px 4px 0 0;
+}
+.btn:focus-visible,
+.dropdown-item:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+/* Hilangkan outline default browser pada elemen yang sudah punya focus-visible */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ── Filter form loading feedback ────────────────────────────── */
+.pk-filter-loading {
+    opacity: .6;
+    pointer-events: none;
+}
+.pk-filter-loading::after {
+    content: '';
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: pk-spin .6s linear infinite;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+@keyframes pk-spin { to { transform: rotate(360deg); } }
+
+/* ── Print styles (kwitansi) ─────────────────────────────────── */
+@media print {
+    .pk-sidebar, .pk-topbar, .pk-flash-wrapper,
+    .no-print, nav[aria-label="breadcrumb"] { display: none !important; }
+    .pk-main { margin: 0 !important; }
+    body { background: #fff !important; }
+    .pk-card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+}

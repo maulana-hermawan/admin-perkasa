@@ -299,6 +299,51 @@ if ($action === 'edit') {
     ];
 }
 
+// ── GET: KWITANSI CETAK ───────────────────────────────────────
+if ($action === 'kwitansi') {
+    $id  = get_int('id');
+    $pay = db_fetch(
+        "SELECT ps.*, s.nama_lengkap, s.nomor_induk, s.nomor_wa, s.alamat
+         FROM pembayaran_siswa ps
+         JOIN siswa s ON ps.siswa_id = s.id
+         WHERE ps.id = ? AND ps.deleted_at IS NULL",
+        "i", [$id]
+    );
+    if (!$pay) {
+        set_flash('danger','Data pembayaran tidak ditemukan.');
+        redirect('index.php?page=pembayaran');
+    }
+
+    // Line items (migration-012 table)
+    $kwit_items = [];
+    static $_kwit_tbl = null;
+    if ($_kwit_tbl === null) {
+        $_kwit_tbl = (bool)db_value(
+            "SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='pembayaran_siswa_detail'"
+        );
+    }
+    if ($_kwit_tbl) {
+        $kwit_items = db_fetch_all(
+            "SELECT psd.*, p.nama_program AS prog_nama
+             FROM pembayaran_siswa_detail psd
+             LEFT JOIN program p ON psd.program_id = p.id
+             WHERE psd.pembayaran_id = ?
+             ORDER BY psd.id",
+            "i", [$id]
+        );
+    }
+
+    return [
+        'title'       => 'Kwitansi #' . $id,
+        'view'        => __DIR__ . '/kwitansi.view.php',
+        'breadcrumbs' => [['label'=>'Pembayaran','url'=>'index.php?page=pembayaran'],['label'=>'Kwitansi']],
+        'pay'         => $pay,
+        'kwit_items'  => $kwit_items,
+        'stat'        => $stat,
+    ];
+}
+
 // ── GET: LIST ─────────────────────────────────────────────────
 $f_siswa  = get('siswa_id');
 $f_status = get('status');
