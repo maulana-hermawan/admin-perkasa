@@ -34,6 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = strtolower(trim(post('email','')));
     $lahir    = post('tanggal_lahir','') ?: null;
     $sekolah  = trim(post('asal_sekolah',''));
+    $ortu     = trim(post('nama_ortu',''));
+    $wa_ortu  = preg_replace('/\D/','',post('nomor_wa_ortu',''));
     $target   = post('target_seleksi','');
     $gender   = post('jenis_kelamin','');
     $alamat   = trim(post('alamat',''));
@@ -51,13 +53,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Nomor WhatsApp ini sudah terdaftar hari ini. Admin akan menghubungi Anda segera.';
         } else {
             try {
-                db_execute(
-                    "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
-                     VALUES (?,?,?,?,?,?,?,?,?)",
-                    "sssssssss",
-                    [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
-                     $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
-                );
+                // Schema-safe: kolom ortu mungkin belum dimigrasi di server
+                static $_has_ortu = null;
+                if ($_has_ortu === null) {
+                    $_has_ortu = (bool)db_value(
+                        "SELECT COUNT(*) FROM information_schema.COLUMNS
+                         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='calon_siswa' AND COLUMN_NAME='nama_ortu'"
+                    );
+                }
+                if ($_has_ortu) {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,nama_ortu,nomor_wa_ortu,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        "sssssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $ortu ?: null, $wa_ortu ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                } else {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?)",
+                        "sssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                }
                 $new_id = db_conn()->insert_id;
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
@@ -201,6 +222,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label fw-bold small">Asal Sekolah / Instansi</label>
                     <input type="text" name="asal_sekolah" class="form-control"
                            value="<?= e(post('asal_sekolah','')) ?>" placeholder="SMA/SMK/PTN...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nama Orang Tua / Wali</label>
+                    <input type="text" name="nama_ortu" class="form-control"
+                           value="<?= e(post('nama_ortu','')) ?>" placeholder="Nama orang tua / wali">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nomor WA Orang Tua / Wali</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-whatsapp text-success"></i></span>
+                        <input type="tel" name="nomor_wa_ortu" class="form-control"
+                               value="<?= e(post('nomor_wa_ortu','')) ?>" placeholder="08xxxxxxxxxx">
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold small">Alamat</label>
