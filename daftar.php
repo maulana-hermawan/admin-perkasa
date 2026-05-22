@@ -38,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gender   = post('jenis_kelamin','');
     $alamat   = trim(post('alamat',''));
     $catatan  = trim(post('catatan',''));
+    $nama_ortu= trim(post('nama_ortu',''));
+    $wa_ortu  = preg_replace('/\D/','',post('nomor_wa_ortu',''));
 
     if (!$nama || strlen($nama) < 3) { $error = 'Nama lengkap minimal 3 karakter.'; }
     elseif (!$wa || strlen($wa) < 9)  { $error = 'Nomor WhatsApp tidak valid.'; }
@@ -51,13 +53,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Nomor WhatsApp ini sudah terdaftar hari ini. Admin akan menghubungi Anda segera.';
         } else {
             try {
-                db_execute(
-                    "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
-                     VALUES (?,?,?,?,?,?,?,?,?)",
-                    "sssssssss",
-                    [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
-                     $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                // Schema-safe: kolom ortu mungkin belum ada (sebelum migration 014)
+                $has_ortu = (bool)db_value(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='calon_siswa' AND COLUMN_NAME='nama_ortu'"
                 );
+                if ($has_ortu) {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,nama_ortu,nomor_wa_ortu,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        "sssssssssss",
+                        [$nama, $wa, $nama_ortu ?: null, $wa_ortu ?: null, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                } else {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?)",
+                        "sssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                }
                 $new_id = db_conn()->insert_id;
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
@@ -149,6 +166,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label fw-bold small">Tanggal Lahir</label>
                     <input type="date" name="tanggal_lahir" class="form-control"
                            value="<?= e(post('tanggal_lahir','')) ?>">
+                </div>
+
+                <!-- Data Ortu/Wali -->
+                <div class="col-12">
+                    <hr class="my-1">
+                    <div class="text-muted fw-bold small"><i class="bi bi-people-fill me-1"></i>Data Orang Tua / Wali</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nama Ortu / Wali</label>
+                    <input type="text" name="nama_ortu" class="form-control"
+                           value="<?= e(post('nama_ortu','')) ?>" placeholder="Nama lengkap ortu/wali">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nomor WhatsApp Ortu / Wali</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-whatsapp text-success"></i></span>
+                        <input type="tel" name="nomor_wa_ortu" class="form-control"
+                               value="<?= e(post('nomor_wa_ortu','')) ?>" placeholder="08xxxxxxxxxx (opsional)">
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold small">Jenis Kelamin</label>

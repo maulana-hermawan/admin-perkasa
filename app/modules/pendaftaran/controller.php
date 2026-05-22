@@ -42,10 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $nomor_induk = _pendaftaran_generate_nomor_induk();
                 db_execute(
-                    "INSERT INTO siswa (user_id,nomor_induk,nama_lengkap,nomor_wa,tanggal_lahir,jenis_kelamin,asal_sekolah,target_seleksi,alamat,status_siswa)
-                     VALUES (?,?,?,?,?,?,?,?,?,'Aktif')",
-                    "issssssss",
+                    "INSERT INTO siswa (user_id,nomor_induk,nama_lengkap,nomor_wa,nama_ortu,nomor_wa_ortu,tanggal_lahir,jenis_kelamin,asal_sekolah,target_seleksi,alamat,status_siswa)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,'Aktif')",
+                    "isssssssss" . "s",
                     [$uid,$nomor_induk,$calon['nama_lengkap'],$calon['nomor_wa'],
+                     $calon['nama_ortu'] ?? null, $calon['nomor_wa_ortu'] ?? null,
                      $calon['tanggal_lahir'],$calon['jenis_kelamin'],
                      $calon['asal_sekolah'],$calon['target_seleksi'],$calon['alamat']]
                 );

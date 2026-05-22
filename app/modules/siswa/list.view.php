@@ -240,18 +240,27 @@ $base_params = array_filter([
                                value="<?= (int)$s['id'] ?>" onchange="updateBulk()">
                     </td>
                     <td>
-                        <div class="fw-bold text-primary" style="font-size:.72rem;"><?= e($s['nomor_induk'] ?? '—') ?></div>
-                        <div class="fw-bold">
-                            <a href="index.php?page=siswa&action=detail&id=<?= (int)$s['id'] ?>"
-                               class="text-decoration-none text-dark">
-                                <?= e($s['nama_lengkap']) ?>
-                            </a>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0
+                                        <?= $s['jenis_kelamin']==='P' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-primary bg-opacity-10 text-primary' ?>"
+                                 style="width:40px;height:40px;font-size:.95rem;">
+                                <?= strtoupper(substr($s['nama_lengkap'], 0, 1)) ?>
+                            </div>
+                            <div style="min-width:0;">
+                                <div class="fw-bold text-primary font-monospace" style="font-size:.68rem;letter-spacing:.02em;"><?= e($s['nomor_induk'] ?? '—') ?></div>
+                                <div class="fw-semibold">
+                                    <a href="index.php?page=siswa&action=detail&id=<?= (int)$s['id'] ?>"
+                                       class="text-decoration-none text-dark">
+                                        <?= e($s['nama_lengkap']) ?>
+                                    </a>
+                                </div>
+                                <?php if ($s['nama_ortu']): ?>
+                                <div class="text-muted" style="font-size:.68rem;">
+                                    <i class="bi bi-person-heart me-1"></i><?= e($s['nama_ortu']) ?>
+                                </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <?php if ($s['nama_ortu']): ?>
-                        <div class="text-muted" style="font-size:.7rem;">
-                            Ortu: <?= e($s['nama_ortu']) ?>
-                        </div>
-                        <?php endif; ?>
                     </td>
                     <td>
                         <?php if ($s['nama_program']): ?>
@@ -263,15 +272,29 @@ $base_params = array_filter([
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($s['nomor_wa']): ?>
-                        <a href="<?= e(wa_link($s['nomor_wa'])) ?>" target="_blank"
-                           class="text-decoration-none text-dark d-flex align-items-center gap-1">
-                            <i class="bi bi-whatsapp text-success" style="font-size:.8rem;"></i>
-                            <?= e($s['nomor_wa']) ?>
-                        </a>
-                        <?php endif; ?>
+                        <div class="d-flex flex-column gap-1 align-items-start">
+                            <?php if ($s['nomor_wa']): ?>
+                            <a href="<?= e(wa_link($s['nomor_wa'], 'Halo '.$s['nama_lengkap'].', dari Perkasa Mulia Training Center.')) ?>" target="_blank"
+                               class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 text-decoration-none d-inline-flex align-items-center gap-1"
+                               style="font-size:.7rem;font-weight:500;" title="Chat WA siswa">
+                                <i class="bi bi-whatsapp"></i><?= e($s['nomor_wa']) ?>
+                                <span class="opacity-75">· Siswa</span>
+                            </a>
+                            <?php endif; ?>
+                            <?php if (!empty($s['nomor_wa_ortu'])): ?>
+                            <a href="<?= e(wa_link($s['nomor_wa_ortu'], 'Halo, kami dari Perkasa Mulia Training Center terkait ananda '.$s['nama_lengkap'].'.')) ?>" target="_blank"
+                               class="badge bg-secondary bg-opacity-10 text-secondary border text-decoration-none d-inline-flex align-items-center gap-1"
+                               style="font-size:.7rem;font-weight:500;" title="Chat WA ortu/wali">
+                                <i class="bi bi-whatsapp"></i><?= e($s['nomor_wa_ortu']) ?>
+                                <span class="opacity-75">· Ortu</span>
+                            </a>
+                            <?php endif; ?>
+                            <?php if (!$s['nomor_wa'] && empty($s['nomor_wa_ortu'])): ?>
+                            <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </div>
                         <?php if ($s['target_seleksi']): ?>
-                        <div class="text-muted" style="font-size:.68rem;">
+                        <div class="text-muted mt-1" style="font-size:.68rem;">
                             <i class="bi bi-bullseye me-1"></i><?= e($s['target_seleksi']) ?>
                         </div>
                         <?php endif; ?>
@@ -391,6 +414,11 @@ $base_params = array_filter([
                 </div>
                 <a href="index.php?page=siswa&action=detail&id=<?= (int)$s['id'] ?>"
                    class="fw-bold text-dark text-decoration-none d-block"><?= e($s['nama_lengkap']) ?></a>
+                <?php if ($s['nama_ortu']): ?>
+                <div class="text-muted" style="font-size:.7rem;">
+                    <i class="bi bi-person-heart me-1"></i><?= e($s['nama_ortu']) ?>
+                </div>
+                <?php endif; ?>
                 <!-- Meta -->
                 <div class="d-flex flex-wrap gap-2 mt-1">
                     <?php if ($s['nama_program']): ?>
@@ -399,8 +427,13 @@ $base_params = array_filter([
                     </span>
                     <?php endif; ?>
                     <?php if ($s['nomor_wa']): ?>
-                    <a href="<?= e(wa_link($s['nomor_wa'])) ?>" class="badge bg-success bg-opacity-10 text-success text-decoration-none small" target="_blank">
-                        <i class="bi bi-whatsapp me-1"></i><?= e($s['nomor_wa']) ?>
+                    <a href="<?= e(wa_link($s['nomor_wa'], 'Halo '.$s['nama_lengkap'].', dari Perkasa Mulia Training Center.')) ?>" class="badge bg-success bg-opacity-10 text-success text-decoration-none small" target="_blank">
+                        <i class="bi bi-whatsapp me-1"></i><?= e($s['nomor_wa']) ?> · Siswa
+                    </a>
+                    <?php endif; ?>
+                    <?php if (!empty($s['nomor_wa_ortu'])): ?>
+                    <a href="<?= e(wa_link($s['nomor_wa_ortu'], 'Halo, kami dari Perkasa Mulia Training Center terkait ananda '.$s['nama_lengkap'].'.')) ?>" class="badge bg-secondary bg-opacity-10 text-secondary text-decoration-none small" target="_blank">
+                        <i class="bi bi-whatsapp me-1"></i><?= e($s['nomor_wa_ortu']) ?> · Ortu
                     </a>
                     <?php endif; ?>
                 </div>
@@ -423,8 +456,15 @@ $base_params = array_filter([
                     </li>
                     <?php if ($s['nomor_wa']): ?>
                     <li>
-                        <a class="dropdown-item small" href="<?= e(wa_link($s['nomor_wa'])) ?>" target="_blank">
-                            <i class="bi bi-whatsapp me-2 text-success"></i>Kirim WA
+                        <a class="dropdown-item small" href="<?= e(wa_link($s['nomor_wa'], 'Halo '.$s['nama_lengkap'].', dari Perkasa Mulia Training Center.')) ?>" target="_blank">
+                            <i class="bi bi-whatsapp me-2 text-success"></i>Kirim WA Siswa
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if (!empty($s['nomor_wa_ortu'])): ?>
+                    <li>
+                        <a class="dropdown-item small" href="<?= e(wa_link($s['nomor_wa_ortu'], 'Halo, kami dari Perkasa Mulia Training Center terkait ananda '.$s['nama_lengkap'].'.')) ?>" target="_blank">
+                            <i class="bi bi-whatsapp me-2 text-secondary"></i>Kirim WA Ortu/Wali
                         </a>
                     </li>
                     <?php endif; ?>
