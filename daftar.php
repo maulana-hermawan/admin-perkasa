@@ -34,6 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = strtolower(trim(post('email','')));
     $lahir    = post('tanggal_lahir','') ?: null;
     $sekolah  = trim(post('asal_sekolah',''));
+    $ortu     = trim(post('nama_ortu',''));
+    $wa_ortu  = preg_replace('/\D/','',post('nomor_wa_ortu',''));
     $target   = post('target_seleksi','');
     $gender   = post('jenis_kelamin','');
     $alamat   = trim(post('alamat',''));
@@ -51,21 +53,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Nomor WhatsApp ini sudah terdaftar hari ini. Admin akan menghubungi Anda segera.';
         } else {
             try {
-                db_execute(
-                    "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
-                     VALUES (?,?,?,?,?,?,?,?,?)",
-                    "sssssssss",
-                    [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
-                     $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
-                );
+                // Schema-safe: kolom ortu mungkin belum dimigrasi di server
+                static $_has_ortu = null;
+                if ($_has_ortu === null) {
+                    $_has_ortu = (bool)db_value(
+                        "SELECT COUNT(*) FROM information_schema.COLUMNS
+                         WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='calon_siswa' AND COLUMN_NAME='nama_ortu'"
+                    );
+                }
+                if ($_has_ortu) {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,nama_ortu,nomor_wa_ortu,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        "sssssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $ortu ?: null, $wa_ortu ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                } else {
+                    db_execute(
+                        "INSERT INTO calon_siswa (nama_lengkap,nomor_wa,email,tanggal_lahir,asal_sekolah,target_seleksi,jenis_kelamin,alamat,catatan_pendaftar)
+                         VALUES (?,?,?,?,?,?,?,?,?)",
+                        "sssssssss",
+                        [$nama, $wa, $email ?: null, $lahir, $sekolah ?: null,
+                         $target ?: null, $gender ?: null, $alamat ?: null, $catatan ?: null]
+                    );
+                }
                 $new_id = db_conn()->insert_id;
                 $nomor_pendaftaran = 'PDR-' . date('Ymd') . '-' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
                 $success = true;
 
-                // Notif WA ke admin (jika Fonnte dikonfigurasi)
-                $admin_wa = env('ADMIN_WA_NUMBER','');
-                if ($admin_wa) {
-                    send_wa($admin_wa, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
+                // Notif WA ke admin (bisa >1 nomor, pisahkan dengan koma)
+                $admin_wa = env('ADMIN_WA_NUMBER','087777538280,081235647133');
+                foreach (array_filter(array_map('trim', explode(',', $admin_wa))) as $no) {
+                    send_wa($no, "📋 Pendaftar baru!\n\n*Nama:* $nama\n*WA:* $wa\n*Target:* " . ($target ?: '-') . "\n\nCek di panel admin → Pendaftaran.");
                 }
             } catch (Throwable $ex) {
                 $error = 'Terjadi kesalahan sistem. Coba lagi atau hubungi admin langsung via WhatsApp.';
@@ -84,7 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="apple-touch-icon" href="assets/logo.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <style>
+        [x-cloak] { display: none !important; }
         body { background: linear-gradient(135deg,#001233 0%,#0d3b66 100%); min-height: 100vh; padding: 2rem 1rem; }
         .reg-card { max-width:580px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; }
         .reg-header { background:#001233; color:#fff; padding:1.5rem 2rem; }
@@ -159,19 +182,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="P" <?= post('jenis_kelamin')==='P'?'selected':'' ?>>Perempuan</option>
                     </select>
                 </div>
-                <div class="col-12">
+                <div class="col-12" x-data="{
+                    seleksi: '<?= e(post('_target_base','')) ?>',
+                    pangkat: '<?= e(post('_target_pangkat','')) ?>',
+                    lainnya: '<?= e(post('_target_lainnya','')) ?>',
+                    needPangkat() { return ['POLRI','TNI AD','TNI AL','TNI AU'].includes(this.seleksi); },
+                    combined() {
+                        if (this.seleksi === 'LAINNYA') return this.lainnya;
+                        if (this.needPangkat() && this.pangkat) return this.pangkat + ' ' + this.seleksi;
+                        return this.seleksi;
+                    }
+                }">
+                    <input type="hidden" name="target_seleksi" :value="combined()">
+                    <input type="hidden" name="_target_base" :value="seleksi">
+                    <input type="hidden" name="_target_pangkat" :value="pangkat">
+                    <input type="hidden" name="_target_lainnya" :value="lainnya">
                     <label class="form-label fw-bold small">Target Seleksi</label>
-                    <select name="target_seleksi" class="form-select">
+                    <select x-model="seleksi" class="form-select" @change="pangkat=''; lainnya='';">
                         <option value="">— Pilih (opsional) —</option>
-                        <?php foreach(['Polri','TNI AD','TNI AL','TNI AU','Akmil','IPDN','Bintara','Tamtama','Lainnya'] as $t): ?>
-                        <option value="<?= $t ?>" <?= post('target_seleksi')===$t?'selected':'' ?>><?= $t ?></option>
+                        <?php foreach(['POLRI','TNI AD','TNI AL','TNI AU','IPDN','STIN','STIS','STMKG','POLTEK SSN','POLTEKIP','POLTEKIM','CPNS','LAINNYA'] as $t): ?>
+                        <option value="<?= $t ?>"><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div x-show="needPangkat()" x-cloak class="mt-2">
+                        <label class="form-label small">Pangkat / Jenjang</label>
+                        <select x-model="pangkat" class="form-select">
+                            <option value="">— Pilih Pangkat —</option>
+                            <option value="TAMTAMA">TAMTAMA</option>
+                            <option value="BINTARA">BINTARA</option>
+                            <option value="AKADEMI / PERWIRA">AKADEMI / PERWIRA</option>
+                        </select>
+                    </div>
+                    <div x-show="seleksi === 'LAINNYA'" x-cloak class="mt-2">
+                        <label class="form-label small">Sebutkan target seleksi</label>
+                        <input type="text" x-model="lainnya" class="form-control" placeholder="Ketik target seleksi Anda">
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold small">Asal Sekolah / Instansi</label>
                     <input type="text" name="asal_sekolah" class="form-control"
                            value="<?= e(post('asal_sekolah','')) ?>" placeholder="SMA/SMK/PTN...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nama Orang Tua / Wali</label>
+                    <input type="text" name="nama_ortu" class="form-control"
+                           value="<?= e(post('nama_ortu','')) ?>" placeholder="Nama orang tua / wali">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Nomor WA Orang Tua / Wali</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-whatsapp text-success"></i></span>
+                        <input type="tel" name="nomor_wa_ortu" class="form-control"
+                               value="<?= e(post('nomor_wa_ortu','')) ?>" placeholder="08xxxxxxxxxx">
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold small">Alamat</label>
@@ -191,10 +254,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                     <p class="text-muted text-center" style="font-size:.72rem;">
                         Data Anda akan digunakan hanya untuk keperluan pendaftaran bimbel Perkasa.<br>
-                        Butuh info lebih lanjut? Chat via WA:
-                        <a href="https://wa.me/62<?= ltrim(env('ADMIN_WA_NUMBER','081234567890'),'0') ?>">
-                            <?= e(env('ADMIN_WA_NUMBER','0812-3456-7890')) ?>
-                        </a>
+                        Butuh info lebih lanjut? Chat via WA:<br>
+                        <a href="https://wa.me/6287777538280">087777538280</a> (Coach Bagus)
+                        &nbsp;·&nbsp;
+                        <a href="https://wa.me/6281235647133">081235647133</a> (Miss Dina)
                     </p>
                 </div>
             </div>

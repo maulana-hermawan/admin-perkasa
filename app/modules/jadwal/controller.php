@@ -24,7 +24,7 @@ if ($action === 'get_json') {
 
 // ── DELETE ────────────────────────────────────────────────────
 if ($action === 'delete') {
-    csrf_check();
+    csrf_check_get();
     $jid  = get_int('id');
     $lama = db_fetch("SELECT nama_kegiatan,tanggal FROM jadwal WHERE id=?","i",[$jid]);
     if ($lama) {
